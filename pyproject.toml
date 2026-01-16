@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "apiflowagent"
+version = "0.1.0"
+description = "AI-powered API test automation tool based on Claude SDK"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "ApiFlowAgent Team"}
+]
+
+dependencies = [
+    "anthropic>=0.18.0",
+    "httpx>=0.27.0",
+    "pytest>=8.0.0",
+    "allure-pytest>=2.13.0",
+    "pydantic>=2.5.0",
+    "pyyaml>=6.0.0",
+    "jsonpath-ng>=1.6.0",
+    "typer>=0.9.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+apiflow = "src.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
