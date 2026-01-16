@@ -1,0 +1,20 @@
+# ApiFlowAgent 配置文件
+
+# HTTP 请求配置
+http:
+  timeout: 30  # 请求超时时间（秒）
+  retry: 0     # 重试次数（MVP 阶段不重试）
+
+# AI 配置
+ai:
+  model: claude-sonnet-4-20250514
+  max_tokens: 4096
+
+# 测试配置
+test:
+  continue_on_failure: true  # 失败后继续执行
+
+# 报告配置
+report:
+  output_dir: reports
+  allure_results: reports/allure-results
