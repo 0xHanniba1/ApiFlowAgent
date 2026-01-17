@@ -5,14 +5,18 @@ ApiFlowAgent 命令行接口
 """
 
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
 import typer
+from dotenv import load_dotenv
 
 from .ai import APIParser, TestGenerator
 from .executor import HttpClient, TestRunner
 from .reporter import AllureReporter
+
+load_dotenv()
 
 
 app = typer.Typer(
@@ -75,7 +79,15 @@ def run(
 
     # Step 3: 执行测试
     typer.echo("\n[3/4] Executing tests...")
-    http_client = HttpClient(base_url=base_url) if base_url else HttpClient()
+
+    # 确定 base_url 优先级：命令行参数 > 环境变量 > Swagger 文档
+    effective_base_url = base_url or os.getenv("API_BASE_URL") or parsed_api.get("info", {}).get("base_url")
+    if not effective_base_url:
+        typer.echo("Error: No base URL found. Provide --base-url, set API_BASE_URL in .env, or include servers in API doc.", err=True)
+        raise typer.Exit(1)
+
+    typer.echo(f"      Using base URL: {effective_base_url}")
+    http_client = HttpClient(base_url=effective_base_url)
     runner = TestRunner(http_client=http_client)
     try:
         result = runner.run(test_plan)

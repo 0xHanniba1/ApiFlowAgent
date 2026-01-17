@@ -15,14 +15,37 @@
 - [x] 执行层：测试运行器 (`src/executor/runner.py`)
 - [x] 报告层：Allure 适配器 (`src/reporter/allure_adapter.py`)
 - [x] CLI：apiflow run 命令 (`src/cli.py`)
+- [x] 准备示例 Swagger 文件 (`data/api_docs/sample_user_api.json`)
+- [x] 修复 base_url 自动提取问题 (`src/cli.py` 第 83-90 行)
 
 ## 进行中
 - [ ] 端到端测试验证
 
+## 待验证
+运行以下命令验证整体流程：
+```bash
+source venv/bin/activate
+apiflow run --doc data/api_docs/sample_user_api.json
+```
+
+预期结果：
+- [1/4] 解析文档 → 找到 6 个端点
+- [2/4] 生成用例 → 生成约 12-13 个测试用例
+- [3/4] 执行测试 → 使用 base_url: https://jsonplaceholder.typicode.com
+- [4/4] 生成报告 → 输出通过/失败统计
+
+如有报错，需要修复后重试。
+
 ## 待开始
-- [ ] 准备示例 Swagger 文件进行测试
-- [ ] 安装依赖并运行测试
-- [ ] 修复发现的问题
+- [ ] 修复测试中发现的问题（如有）
+- [ ] 提交代码并更新 changelog
 
 ## 下次继续
-从这里开始：准备示例 Swagger 文件，安装依赖，运行 `apiflow run` 验证整体流程
+从这里开始：
+1. 运行 `apiflow run --doc data/api_docs/sample_user_api.json` 验证
+2. 查看测试结果，如有失败用例需分析原因
+3. 修复问题后提交代码
+
+## 最近修改记录
+- `src/cli.py`：添加 base_url 自动提取逻辑，优先级为 命令行参数 > 环境变量 > Swagger 文档
+- `data/api_docs/sample_user_api.json`：示例 Swagger 文件，使用 JSONPlaceholder API
