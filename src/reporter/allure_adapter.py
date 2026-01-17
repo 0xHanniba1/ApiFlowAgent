@@ -1,10 +1,12 @@
 """
 Allure 报告适配器模块
 
-将测试结果转换为 Allure 报告格式。
+将测试结果转换为 Allure 报告格式和 JUnit XML 格式。
 """
 
 import json
+import xml.etree.ElementTree as ET
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -146,6 +148,67 @@ class AllureReporter:
 
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
+
+        return str(output_path)
+
+    def save_junit_xml(self, plan_result: TestPlanResult, output_path: Optional[str] = None) -> str:
+        """
+        保存测试结果为 JUnit XML 格式（Jenkins 原生支持）
+
+        Args:
+            plan_result: 测试计划执行结果
+            output_path: 输出文件路径（可选）
+
+        Returns:
+            输出文件路径
+        """
+        if output_path is None:
+            output_path = self.results_dir / "junit_report.xml"
+        else:
+            output_path = Path(output_path)
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # 创建 testsuite 元素
+        testsuite = ET.Element("testsuite")
+        testsuite.set("name", plan_result.plan_name)
+        testsuite.set("tests", str(plan_result.total))
+        testsuite.set("failures", str(plan_result.failed))
+        testsuite.set("errors", "0")
+        testsuite.set("time", f"{plan_result.elapsed_ms / 1000:.3f}")
+        testsuite.set("timestamp", plan_result.timestamp)
+
+        # 添加每个测试用例
+        for result in plan_result.results:
+            testcase = ET.SubElement(testsuite, "testcase")
+            testcase.set("name", result.test_case_name)
+            testcase.set("classname", result.endpoint_id)
+            testcase.set("time", f"{result.elapsed_ms / 1000:.3f}")
+
+            if not result.passed:
+                failure = ET.SubElement(testcase, "failure")
+                failure.set("type", "AssertionError")
+
+                # 收集失败的断言信息
+                failed_assertions = [
+                    a for a in result.assertions if not a.passed
+                ]
+                if failed_assertions:
+                    messages = []
+                    for a in failed_assertions:
+                        messages.append(
+                            f"{a.assertion_type}: expected {a.expected}, got {a.actual}"
+                        )
+                    failure.set("message", "; ".join(messages))
+                    failure.text = "\n".join(messages)
+                elif result.error:
+                    failure.set("message", result.error)
+                    failure.text = result.error
+
+        # 写入文件
+        tree = ET.ElementTree(testsuite)
+        ET.indent(tree, space="  ")
+        tree.write(output_path, encoding="utf-8", xml_declaration=True)
 
         return str(output_path)
 

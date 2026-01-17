@@ -1,6 +1,8 @@
 # 项目状态
 
 ## 已完成
+
+### v0.1.0 MVP
 - [x] 项目需求梳理
 - [x] 架构设计
 - [x] 功能模块规划
@@ -16,36 +18,62 @@
 - [x] 报告层：Allure 适配器 (`src/reporter/allure_adapter.py`)
 - [x] CLI：apiflow run 命令 (`src/cli.py`)
 - [x] 准备示例 Swagger 文件 (`data/api_docs/sample_user_api.json`)
-- [x] 修复 base_url 自动提取问题 (`src/cli.py` 第 83-90 行)
+- [x] 端到端测试验证
 
-## 进行中
-- [ ] 端到端测试验证
+### v0.1.1 命令分离 & Jenkins 集成
+- [x] CLI：apiflow generate 命令（仅生成测试计划）
+- [x] CLI：apiflow execute 命令（仅执行测试计划）
+- [x] 报告层：JUnit XML 输出（Jenkins 原生支持）
+- [x] 重构 apiflow run 命令（组合 generate + execute）
 
-## 待验证
-运行以下命令验证整体流程：
+## 当前版本
+
+**v0.1.1** - 命令分离版本
+
+## 使用方式
+
+### 方式一：分离式（推荐用于 CI/CD）
+
 ```bash
-source venv/bin/activate
-apiflow run --doc data/api_docs/sample_user_api.json
+# 开发阶段：生成测试计划（调用 AI）
+apiflow generate --doc data/api_docs/swagger.json
+
+# CI 阶段：执行测试计划（不调用 AI，快速）
+apiflow execute --plan data/test_plans/xxx_plan.json --junit reports/junit.xml
 ```
 
-预期结果：
-- [1/4] 解析文档 → 找到 6 个端点
-- [2/4] 生成用例 → 生成约 12-13 个测试用例
-- [3/4] 执行测试 → 使用 base_url: https://jsonplaceholder.typicode.com
-- [4/4] 生成报告 → 输出通过/失败统计
+### 方式二：一键式（调试/演示）
 
-如有报错，需要修复后重试。
+```bash
+apiflow run --doc data/api_docs/swagger.json
+```
 
 ## 待开始
-- [ ] 修复测试中发现的问题（如有）
-- [ ] 提交代码并更新 changelog
 
-## 下次继续
-从这里开始：
-1. 运行 `apiflow run --doc data/api_docs/sample_user_api.json` 验证
-2. 查看测试结果，如有失败用例需分析原因
-3. 修复问题后提交代码
+- [ ] v0.2：完善断言类型（contains, regex, length 等）
+- [ ] v0.3：多格式支持（Postman Collection, OpenAPI 2.0）
+- [ ] v0.4：CLI 增强（--filter, --env 参数）
+- [ ] v0.5：监控巡检（定时任务 + 告警）
 
-## 最近修改记录
-- `src/cli.py`：添加 base_url 自动提取逻辑，优先级为 命令行参数 > 环境变量 > Swagger 文档
-- `data/api_docs/sample_user_api.json`：示例 Swagger 文件，使用 JSONPlaceholder API
+## Jenkins 集成
+
+```groovy
+pipeline {
+    agent any
+    environment {
+        API_BASE_URL = 'https://your-api.com'
+    }
+    stages {
+        stage('API Tests') {
+            steps {
+                sh 'apiflow execute --plan data/test_plans/plan.json --junit reports/junit.xml'
+            }
+            post {
+                always {
+                    junit 'reports/junit.xml'
+                }
+            }
+        }
+    }
+}
+```

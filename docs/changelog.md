@@ -8,8 +8,25 @@
 
 ## [Unreleased]
 
+暂无
+
+---
+
+## [0.1.1] - 2026-01-17
+
 ### Added
-- 端到端测试验证（待完成）
+- **CLI 命令分离**
+  - `apiflow generate` - 仅解析文档并生成测试计划（调用 AI）
+  - `apiflow execute` - 仅执行已有测试计划（不调用 AI）
+  - 重构 `apiflow run` 为 generate + execute 组合
+
+- **Jenkins 集成支持**
+  - JUnit XML 报告输出 (`--junit` 参数)
+  - Jenkins Pipeline 示例文档
+
+### Changed
+- CLI 帮助文档更新，添加使用示例
+- 代码重构，提取 `_parse_and_generate` 和 `_execute_plan` 内部函数
 
 ---
 
@@ -61,4 +78,4 @@
 ---
 
 *创建时间：2026-01-16*
-*最后更新：2026-01-16*
+*最后更新：2026-01-17*
